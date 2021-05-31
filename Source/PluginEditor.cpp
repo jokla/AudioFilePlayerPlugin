@@ -23,8 +23,8 @@ AudioFilePlayerEditor::AudioFilePlayerEditor(AudioFilePlayerProcessor& p) :
     AudioProcessorEditor(&p),
     processor(p)
 {
-    thumbnail = new AudioThumbnailComp(processor.formatManager, processor.transportSource, processor.thumbnailCache, processor.currentlyLoadedFile);
-    addAndMakeVisible(thumbnail);
+    thumbnail = std::make_unique<AudioThumbnailComp>(processor.formatManager, processor.transportSource, processor.thumbnailCache, processor.currentlyLoadedFile);
+    addAndMakeVisible(*thumbnail);
     thumbnail->addChangeListener(this);
 
     addAndMakeVisible(startStopButton);
@@ -35,6 +35,7 @@ AudioFilePlayerEditor::AudioFilePlayerEditor(AudioFilePlayerProcessor& p) :
     setOpaque(true);
 
     setSize(512, 220);
+
 }
 
 AudioFilePlayerEditor::~AudioFilePlayerEditor()
@@ -78,7 +79,7 @@ void AudioFilePlayerEditor::buttonClicked (Button* buttonThatWasClicked)
 
 void AudioFilePlayerEditor::changeListenerCallback(ChangeBroadcaster* source) 
 {
-    if (source == thumbnail)
+    if (source == thumbnail.get())
     {
         processor.loadFileIntoTransport(thumbnail->getLastDroppedFile());
         thumbnail->setFile(thumbnail->getLastDroppedFile());
