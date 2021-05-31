@@ -27,14 +27,19 @@ AudioFilePlayerEditor::AudioFilePlayerEditor(AudioFilePlayerProcessor& p) :
     addAndMakeVisible(*thumbnail);
     thumbnail->addChangeListener(this);
 
+    formatManager.registerBasicFormats();
+
     addAndMakeVisible(startStopButton);
     startStopButton.setButtonText("Play/Stop");
     startStopButton.addListener(this);
     startStopButton.setColour(TextButton::buttonColourId, Colour(0xff79ed7f));
 
+    addAndMakeVisible(openButton);
+    openButton.setButtonText ("Open...");
+    openButton.addListener(this);
     setOpaque(true);
 
-    setSize(512, 220);
+    setSize(512, 252);
 
 }
 
@@ -51,10 +56,11 @@ void AudioFilePlayerEditor::paint(Graphics& g)
 void AudioFilePlayerEditor::resized()
 {
     Rectangle<int> r(getLocalBounds().reduced(4));
+    const Rectangle<int> openControls(r.removeFromBottom(32));
+    const Rectangle<int> startStopControls(r.removeFromBottom(64));
 
-    Rectangle<int> controls(r.removeFromBottom(32));
-
-    startStopButton.setBounds(controls);
+    openButton.setBounds(openControls);
+    startStopButton.setBounds(startStopControls);
 
     r.removeFromBottom(6);
     thumbnail->setBounds(r.removeFromBottom(180));
@@ -65,15 +71,34 @@ void AudioFilePlayerEditor::buttonClicked (Button* buttonThatWasClicked)
 {
     if (buttonThatWasClicked == &startStopButton)
     {
-        if (processor.transportSource.isPlaying())
+      if (processor.transportSource.isPlaying())
         {
-            processor.transportSource.stop();
+          processor.transportSource.stop();
         }
-        else
+      else
         {
-            processor.transportSource.setPosition(0);
-            processor.transportSource.start();
+          processor.transportSource.setPosition(0);
+          processor.transportSource.start();
         }
+    }
+    if (buttonThatWasClicked == &openButton)
+    {
+      juce::FileChooser chooser ("Select a Wave or MP3 file to play...",
+                                 {},
+                                 "*.wav,*.mp3");
+
+      if (chooser.browseForFileToOpen())
+      {
+        auto file = chooser.getResult();
+        std::unique_ptr<AudioFormatReader> reader (formatManager.createReaderFor(file));
+
+        if (reader != nullptr)
+        {
+          processor.loadFileIntoTransport(file);
+          thumbnail->setFile(file);
+        }
+
+      }
     }
 }
 

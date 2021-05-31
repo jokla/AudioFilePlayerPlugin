@@ -38,7 +38,10 @@ private:
 
     std::unique_ptr<AudioThumbnailComp> thumbnail;
 
+    juce::AudioFormatManager formatManager;
+
     TextButton startStopButton;
+    TextButton openButton;
 
     void buttonClicked(Button* buttonThatWasClicked) override;
 
